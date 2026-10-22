@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberSec 4-Digit PIN Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent-hover: #388bfd;
+      --danger: #f85149;
+      --danger-hover: #da3633;
+      --success: #238636;
+      --success-hover: #2ea043;
+      --text-main: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --text-muted: #8b949e;
+      --pin-gold: #f1e05a;
+      --font-mono: 'Fira Code', monospace;
+      --font-sans: 'Inter', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    header h1 {
+      color: var(--text-bright);
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+
+    .main-nav {
+      display: flex;
+      gap: 8px;
+      background: var(--card-bg);
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .nav-btn {
+      flex: 1;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-btn.active {
+      background: var(--border);
+      color: var(--text-bright);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .tab-section { display: none; flex-direction: column; gap: 18px; }
+    .tab-section.active { display: flex; }
+
+    .sub-mode-toggle {
+      display: flex;
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .sub-toggle-btn {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sub-toggle-btn.active {
+      background: var(--border);
+      color: var(--text-bright);
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 24px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(0,0,0,0.15);
+      transition: border-color 0.2s;
+    }
+    .dropzone:hover { border-color: var(--accent); }
+    .dropzone p { color: var(--text-muted); font-size: 0.9rem; }
+    .dropzone .file-name { color: var(--accent); font-weight: 600; word-break: break-all; }
+
+    .preview-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 130px;
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .preview-box img { max-height: 200px; max-width: 100%; border-radius: 6px; }
+    .preview-box span { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono); }
+
+    textarea {
+      width: 100%;
+      background: #090d13;
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      outline: none;
+      resize: vertical;
+      min-height: 100px;
+    }
+    textarea:focus { border-color: var(--accent); }
+
+    .pin-display-box {
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      display: none;
+    }
+    .pin-display-box.show { display: block; }
+    .pin-number {
+      font-family: var(--font-mono);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--pin-gold);
+      letter-spacing: 12px;
+      margin: 8px 0;
+    }
+
+    .pin-input {
+      font-family: var(--font-mono);
+      font-size: 1.6rem;
+      letter-spacing: 10px;
+      text-align: center;
+      background: #090d13;
+      border: 1px solid var(--border);
+      color: var(--pin-gold);
+      padding: 8px 14px;
+      border-radius: 8px;
+      width: 180px;
+      margin: 0 auto;
+      display: block;
+      outline: none;
+    }
+    .pin-input:focus { border-color: var(--accent); }
+
+    button.btn {
+      padding: 12px 20px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button.btn:active { transform: scale(0.99); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: var(--success-hover); }
+    .btn-copy {
+      background: #21262d;
+      color: var(--text-bright);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+
+    .status-msg {
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      padding: 10px 14px;
+      border-radius: 6px;
+      display: none;
+      word-break: break-all;
+    }
+    .status-msg.error { background: rgba(248,81,73,0.1); border: 1px solid var(--danger); color: var(--danger); display: block; }
+    .status-msg.success { background: rgba(35,134,54,0.1); border: 1px solid var(--success); color: #56d364; display: block; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🔐 CyberSec 4-Digit PIN Vault</h1>
+    <p>AES-256 Authenticated Encryption for Files, Images & Secret Messages</p>
+  </header>
+
+  <!-- Top Level Nav: File vs Message -->
+  <nav class="main-nav">
+    <button class="nav-btn active" id="btnTabFiles" onclick="switchMainTab('files')">📁 Photo & File Locker</button>
+    <button class="nav-btn" id="btnTabMsg" onclick="switchMainTab('msg')">💬 Secret Messages</button>
+  </nav>
+
+  <div class="card">
+    
+    <!-- ============================================== -->
+    <!-- SECTION 1: PHOTO & FILE LOCKER                 -->
+    <!-- ============================================== -->
+    <div id="section-files" class="tab-section active">
+      <div class="sub-mode-toggle">
+        <button class="sub-toggle-btn active" id="btnFileSend" onclick="setFileSubMode('send')">🔒 Lock File & Get PIN</button>
+        <button class="sub-toggle-btn" id="btnFileReceive" onclick="setFileSubMode('receive')">🔓 Unlock with 4-Digit PIN</button>
+      </div>
+
+      <div>
+        <label id="lblFilePick">1. Choose File to Encrypt (Photo, PDF, Doc)</label>
+        <input type="file" id="fileInput" style="display:none;" onchange="handleFileSelected(this.files[0])">
+        <div class="dropzone" onclick="document.getElementById('fileInput').click()">
+          <p id="fileDropText">Click here to browse your photo or file</p>
+        </div>
+      </div>
+
+      <div>
+        <label>Preview</label>
+        <div class="preview-box" id="filePreviewBox">
+          <span>No file loaded</span>
+        </div>
+      </div>
+
+      <!-- File Lock Box -->
+      <div id="fileLockArea">
+        <div id="filePinBox" class="pin-display-box">
+          <label>Your Generated 4-Digit Security PIN</label>
+          <div class="pin-number" id="filePinText">----</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Share this PIN and the downloaded .enc file with your friend!</p>
+          <button class="btn-copy" onclick="copyText(lastFilePin)">📋 Copy PIN</button>
+        </div>
+        <button class="btn btn-danger" style="margin-top: 14px;" onclick="lockFile()">🔒 Lock File & Generate PIN</button>
+      </div>
+
+      <!-- File Unlock Box -->
+      <div id="fileUnlockArea" style="display:none;">
+        <label style="text-align: center;">Enter the 4-Digit PIN to Unlock</label>
+        <input type="text" id="fileInputPin" class="pin-input" maxlength="4" placeholder="••••">
+        <button class="btn btn-success" style="margin-top: 16px;" onclick="unlockFile()">🔓 Unlock & Restore File</button>
+      </div>
+
+      <div id="fileStatusBox" class="status-msg"></div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SECTION 2: SECRET TEXT MESSAGES                -->
+    <!-- ============================================== -->
+    <div id="section-msg" class="tab-section">
+      <div class="sub-mode-toggle">
+        <button class="sub-toggle-btn active" id="btnMsgSend" onclick="setMsgSubMode('send')">🔒 Encrypt Message & Get PIN</button>
+        <button class="sub-toggle-btn" id="btnMsgReceive" onclick="setMsgSubMode('receive')">🔓 Decrypt Message with PIN</button>
+      </div>
+
+      <!-- Message SEND Area -->
+      <div id="msgSendArea" style="display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label>Secret Message to Encrypt</label>
+          <textarea id="msgPlainText" placeholder="Type confidential note, password, or secret message here..."></textarea>
+        </div>
+
+        <div id="msgPinBox" class="pin-display-box">
+          <label>Your Generated 4-Digit Security PIN</label>
+          <div class="pin-number" id="msgPinText">----</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Send this 4-Digit PIN along with the encrypted cipher text below!</p>
+          <button class="btn-copy" onclick="copyText(lastMsgPin)">📋 Copy PIN</button>
+        </div>
+
+        <button class="btn btn-danger" onclick="lockMessage()">🔒 Encrypt Message & Generate PIN</button>
+
+        <div id="msgCipherOutputArea" style="display:none;">
+          <label>Encrypted Ciphertext (Copy and send to your friend):</label>
+          <textarea id="msgCipherOutput" readonly></textarea>
+          <button class="btn-copy" style="margin-top:6px;" onclick="copyText(document.getElementById('msgCipherOutput').value)">📋 Copy Encrypted Text</button>
+        </div>
+      </div>
+
+      <!-- Message RECEIVE Area -->
+      <div id="msgReceiveArea" style="display:none; flex-direction:column; gap:14px;">
+        <div>
+          <label>Paste Encrypted Ciphertext</label>
+          <textarea id="msgCipherInput" placeholder="Paste the scrambled encrypted message here..."></textarea>
+        </div>
+
+        <div>
+          <label style="text-align:center;">Enter 4-Digit PIN</label>
+          <input type="text" id="msgInputPin" class="pin-input" maxlength="4" placeholder="••••">
+        </div>
+
+        <button class="btn btn-success" onclick="unlockMessage()">🔓 Decrypt Secret Message</button>
+
+        <div id="msgPlainOutputArea" style="display:none;">
+          <label style="color:#56d364;">Decrypted Original Message:</label>
+          <textarea id="msgPlainOutput" readonly style="border-color:var(--success); color:#56d364;"></textarea>
+        </div>
+      </div>
+
+      <div id="msgStatusBox" class="status-msg"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // TABS & SUBMODES
+  function switchMainTab(tab) {
+    document.getElementById('btnTabFiles').classList.toggle('active', tab === 'files');
+    document.getElementById('btnTabMsg').classList.toggle('active', tab === 'msg');
+    document.getElementById('section-files').classList.toggle('active', tab === 'files');
+    document.getElementById('section-msg').classList.toggle('active', tab === 'msg');
+  }
+
+  function setFileSubMode(mode) {
+    document.getElementById('btnFileSend').classList.toggle('active', mode === 'send');
+    document.getElementById('btnFileReceive').classList.toggle('active', mode === 'receive');
+    document.getElementById('fileLockArea').style.display = mode === 'send' ? 'block' : 'none';
+    document.getElementById('fileUnlockArea').style.display = mode === 'receive' ? 'block' : 'none';
+    document.getElementById('lblFilePick').innerText = mode === 'send' ? '1. Choose File to Encrypt (Photo, PDF, Doc)' : '1. Select the Encrypted (.enc) File';
+    document.getElementById('fileDropText').innerText = mode === 'send' ? 'Click here to browse your photo or file' : 'Click here to select the .enc file';
+  }
+
+  function setMsgSubMode(mode) {
+    document.getElementById('btnMsgSend').classList.toggle('active', mode === 'send');
+    document.getElementById('btnMsgReceive').classList.toggle('active', mode === 'receive');
+    document.getElementById('msgSendArea').style.display = mode === 'send' ? 'flex' : 'none';
+    document.getElementById('msgReceiveArea').style.display = mode === 'receive' ? 'flex' : 'none';
+  }
+
+  // CRYPTO CORE (PBKDF2 -> AES-256-GCM)
+  async function deriveKeyFromPin(pin, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+      "raw", enc.encode(pin), { name: "PBKDF2" }, false, ["deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 300000,
+        hash: "SHA-256"
+      },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  function randomPin() {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  function copyText(str) {
+    navigator.clipboard.writeText(str);
+    alert("Copied to clipboard!");
+  }
+
+  function downloadFile(bytes, filename) {
+    const blob = new Blob([bytes]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // FILE HANDLING
+  let loadedFile = null;
+  let loadedFileBytes = null;
+  let lastFilePin = "";
+
+  function handleFileSelected(file) {
+    if (!file) return;
+    loadedFile = file;
+    document.getElementById('fileDropText').innerHTML = `Selected: <span class="file-name">${file.name}</span> (${(file.size / 1024).toFixed(1)} KB)`;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      loadedFileBytes = new Uint8Array(e.target.result);
+      const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(file.name);
+      const box = document.getElementById('filePreviewBox');
+      if (isImg && !file.name.endsWith('.enc')) {
+        const url = URL.createObjectURL(new Blob([loadedFileBytes]));
+        box.innerHTML = `<img src="${url}">`;
+      } else {
+        box.innerHTML = `<span>🔒 [ Scrambled / Encrypted Binary Content ]</span>`;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  async function lockFile() {
+    const status = document.getElementById('fileStatusBox');
+    if (!loadedFileBytes) {
+      status.className = "status-msg error";
+      status.innerText = "Please select a file to encrypt first!";
+      return;
+    }
+    try {
+      const pin = randomPin();
+      lastFilePin = pin;
+      const salt = window.crypto.getRandomValues(new Uint8Array(16));
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveKeyFromPin(pin, salt);
+
+      const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv }, key, loadedFileBytes
+      );
+
+      const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+      combined.set(salt, 0);
+      combined.set(iv, salt.length);
+      combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+      const outName = loadedFile.name + ".enc";
+      downloadFile(combined, outName);
+
+      document.getElementById('filePinText').innerText = pin;
+      document.getElementById('filePinBox').classList.add('show');
+      status.className = "status-msg success";
+      status.innerText = `Encrypted and downloaded '${outName}'. Give PIN ${pin} to your friend!`;
+    } catch (err) {
+      status.className = "status-msg error";
+      status.innerText = "Error: " + err.message;
+    }
+  }
+
+  async function unlockFile() {
+    const status = document.getElementById('fileStatusBox');
+    const pin = document.getElementById('fileInputPin').value.trim();
+    if (!loadedFileBytes || !loadedFile.name.endsWith('.enc')) {
+      status.className = "status-msg error";
+      status.innerText = "Please select the .enc file first!";
+      return;
+    }
+    if (pin.length !== 4 || isNaN(pin)) {
+      status.className = "status-msg error";
+      status.innerText = "Please enter a valid 4-digit PIN!";
+      return;
+    }
+
+    try {
+      const salt = loadedFileBytes.slice(0, 16);
+      const iv = loadedFileBytes.slice(16, 28);
+      const ciphertext = loadedFileBytes.slice(28);
+
+      const key = await deriveKeyFromPin(pin, salt);
+      const decrypted = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv }, key, ciphertext
+      );
+
+      const restoredName = loadedFile.name.replace('.enc', '');
+      const restoredBytes = new Uint8Array(decrypted);
+      downloadFile(restoredBytes, restoredName);
+
+      status.className = "status-msg success";
+      status.innerText = `Success! Restored and downloaded '${restoredName}'!`;
+    } catch (err) {
+      status.className = "status-msg error";
+      status.innerText = "Decryption Failed! Wrong 4-Digit PIN or corrupted file.";
+    }
+  }
+
+  // MESSAGE HANDLING
+  let lastMsgPin = "";
+
+  async function lockMessage() {
+    const text = document.getElementById('msgPlainText').value.trim();
+    const status = document.getElementById('msgStatusBox');
+    if (!text) {
+      status.className = "status-msg error";
+      status.innerText = "Please type a message to encrypt!";
+      return;
+    }
+
+    try {
+      const pin = randomPin();
+      lastMsgPin = pin;
+      const salt = window.crypto.getRandomValues(new Uint8Array(16));
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveKeyFromPin(pin, salt);
+
+      const encoded = new TextEncoder().encode(text);
+      const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv }, key, encoded
+      );
+
+      // Encode into base64 payload: salt + iv + ciphertext
+      const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+      combined.set(salt, 0);
+      combined.set(iv, salt.length);
+      combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+      let binary = '';
+      for (let i = 0; i < combined.byteLength; i++) {
+        binary += String.fromCharCode(combined[i]);
+      }
+      const b64 = btoa(binary);
+
+      document.getElementById('msgPinText').innerText = pin;
+      document.getElementById('msgPinBox').classList.add('show');
+      document.getElementById('msgCipherOutput').value = b64;
+      document.getElementById('msgCipherOutputArea').style.display = 'block';
+
+      status.className = "status-msg success";
+      status.innerText = "Message encrypted! Copy the ciphertext and share PIN " + pin;
+    } catch (err) {
+      status.className = "status-msg error";
+      status.innerText = "Error: " + err.message;
+    }
+  }
+
+  async function unlockMessage() {
+    const b64 = document.getElementById('msgCipherInput').value.trim();
+    const pin = document.getElementById('msgInputPin').value.trim();
+    const status = document.getElementById('msgStatusBox');
+
+    if (!b64) {
+      status.className = "status-msg error";
+      status.innerText = "Please paste the encrypted ciphertext!";
+      return;
+    }
+    if (pin.length !== 4 || isNaN(pin)) {
+      status.className = "status-msg error";
+      status.innerText = "Please enter the 4-digit PIN!";
+      return;
+    }
+
+    try {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+
+      const salt = bytes.slice(0, 16);
+      const iv = bytes.slice(16, 28);
+      const ciphertext = bytes.slice(28);
+
+      const key = await deriveKeyFromPin(pin, salt);
+      const decrypted = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv }, key, ciphertext
+      );
+
+      const plain = new TextDecoder().decode(decrypted);
+      document.getElementById('msgPlainOutput').value = plain;
+      document.getElementById('msgPlainOutputArea').style.display = 'block';
+
+      status.className = "status-msg success";
+      status.innerText = "Message decrypted successfully!";
+    } catch (err) {
+      status.className = "status-msg error";
+      status.innerText = "Decryption Failed! Wrong 4-Digit PIN or corrupted message.";
+    }
+  }
+</script>
+
+</body>
+</html>
